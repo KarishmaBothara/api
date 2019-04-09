@@ -117,6 +117,11 @@ export interface IMethod extends Codec {
 
 export interface IExtrinsicSignature extends Codec {
   readonly isSigned: boolean;
+  era: IExtrinsicEra;
+}
+
+export interface IExtrinsicEra extends U8a {
+  enabled: boolean;
 }
 
 export interface IExtrinsic extends IMethod {

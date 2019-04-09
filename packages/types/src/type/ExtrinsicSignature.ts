@@ -14,6 +14,7 @@ import Nonce from './NonceCompact';
 import RuntimeVersion from '../rpc/RuntimeVersion';
 import Signature from './Signature';
 import SignaturePayload from './SignaturePayload';
+import {iExtrinsicEra} from "@polkadot/types/types";
 
 export const IMMORTAL_ERA = new Uint8Array([0]);
 
@@ -115,6 +116,13 @@ export default class ExtrinsicSignature extends Struct implements IExtrinsicSign
     return (this.get('version') as U8).toNumber();
   }
 
+  /**
+   * @description The [[ExtrinsicEra]] (mortal or immortal) this signature applies to
+   */
+  set era(era: ExtrinsicEra) {
+    this.set('era', era);
+  }
+
   private injectSignature (signature: Signature, signer: Address, nonce: Nonce, era: ExtrinsicEra): ExtrinsicSignature {
     this.set('era', era);
     this.set('nonce', nonce);
@@ -145,7 +153,7 @@ export default class ExtrinsicSignature extends Struct implements IExtrinsicSign
     const signingPayload = new SignaturePayload({
       nonce,
       method,
-      era: era || IMMORTAL_ERA,
+      era: era || this.era || IMMORTAL_ERA,
       blockHash
     });
     const signature = new Signature(signingPayload.sign(account, version as RuntimeVersion));
