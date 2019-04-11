@@ -14,7 +14,6 @@ import Nonce from './NonceCompact';
 import RuntimeVersion from '../rpc/RuntimeVersion';
 import Signature from './Signature';
 import SignaturePayload from './SignaturePayload';
-import {iExtrinsicEra} from "@polkadot/types/types";
 
 export const IMMORTAL_ERA = new Uint8Array([0]);
 
