@@ -14,7 +14,7 @@ export default function filterEvents (extHash: U8a, { block: { extrinsics, heade
   // find the index of our extrinsic in the block
   const index = allHashes.indexOf(myHash);
 
-  // if we do get the block after Finalised, it _should_ be there
+  // if we do get the block after finalized, it _should_ be there
   if (index === -1) {
     l.warn(`block ${header.hash}: Unable to find extrinsic ${myHash} inside ${allHashes}`);
     return;
@@ -22,6 +22,6 @@ export default function filterEvents (extHash: U8a, { block: { extrinsics, heade
 
   return allEvents.filter(({ phase }) =>
     // only ApplyExtrinsic has the extrinsic index
-    phase.type === 'ApplyExtrinsic' && phase.asApplyExtrinsic.eqn(index)
+    phase.isApplyExtrinsic && phase.asApplyExtrinsic.eqn(index)
   );
 }
