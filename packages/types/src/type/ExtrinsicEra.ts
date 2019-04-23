@@ -21,7 +21,7 @@ interface EraMethod {
 
 export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
   //constructor(value?: any) {
-  constructor (value: any) {
+  constructor (value?: any) {
     super({ImmortalEra, MortalEra}, ExtrinsicEra.decodeExtrinsicEra(value));
   }
 
