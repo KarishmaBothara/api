@@ -8,8 +8,7 @@ import U8a from './codec/U8a';
 import Method from './primitive/Method';
 import Address from './type/Address';
 import { FunctionMetadata } from './Metadata/v0/Modules';
-import {ImmortalEra, MortalEra} from "@polkadot/types/type/ExtrinsicEra";
-import EnumType from "@polkadot/types/codec/EnumType";
+import { ImmortalEra, MortalEra } from './type/ExtrinsicEra';
 
 export type CodecArg = Codec | BN | Boolean | String | Uint8Array | boolean | number | string | undefined | CodecArgArray | CodecArgObject;
 
@@ -122,9 +121,9 @@ export interface IExtrinsicSignature extends Codec {
   era: IExtrinsicEra;
 }
 
-// export interface IExtrinsicEra extends U8a {
-export interface IExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
-enabled?: boolean;
+export interface IExtrinsicEra {
+  immortalEra: ImmortalEra;
+  mortalEra: MortalEra;
 }
 
 export interface IExtrinsic extends IMethod {

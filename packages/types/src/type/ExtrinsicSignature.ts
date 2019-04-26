@@ -118,7 +118,7 @@ export default class ExtrinsicSignature extends Struct implements IExtrinsicSign
   /**
    * @description The [[ExtrinsicEra]] (mortal or immortal) this signature applies to
    */
-  set era(era: ExtrinsicEra) {
+  set era (era: ExtrinsicEra) {
     this.set('era', era);
   }
 
