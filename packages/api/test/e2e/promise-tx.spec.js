@@ -9,8 +9,10 @@ import { randomAsHex } from '@polkadot/util-crypto';
 import Api from '../../src/promise';
 import WsProvider from '../../../rpc-provider/src/ws';
 import SingleAccountSigner from "../util/SingleAccountSigner";
+import ExtrinsicEra, {MortalEra} from '../../../types/src/type/ExtrinsicEra'
+import U64 from "../../../types/src/primitive/U64";
 
-describe.skip('e2e transactions', () => {
+describe('e2e transactions', () => {
   const keyring = testingPairs({ type: 'ed25519' });
   let api;
 
@@ -29,11 +31,43 @@ describe.skip('e2e transactions', () => {
     jest.setTimeout(5000);
   });
 
+
   it('makes a transfer (sign, then send)', async (done) => {
     const nonce = await api.query.system.accountNonce(keyring.dave.address());
-
+    const ex = new ExtrinsicEra(new MortalEra({ isBlockNumber: true, period: new U64(17), current: new U64(16) }), 1);
     return api.tx.balances
       .transfer(keyring.eve.address(), 12345)
+      .sign(keyring.dave, { nonce })
+      .send(({ events, status }) => {
+        console.log('Transaction status:', status.type);
+
+        if (status.isFinalized) {
+          console.log('Completed at block hash', status.value.toHex());
+          console.log('Events:');
+
+          events.forEach(({ phase, event: { data, method, section } }) => {
+            console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+          });
+
+          if (events.length) {
+            done();
+          }
+        }
+      });
+  });
+
+  //
+  // const ex = this.api.tx.cennzxSpot.addLiquidity(assetId, minLiquidity, maxAssetAmount, coreAmount);
+  // (ex.signature as ExtrinsicSignature).set('era', new ExtrinsicEra({enabled: true, period: 4, phase: 1}));
+  // return ex;
+
+  it('makes a transfer (sign, then send)', async (done) => {
+    const nonce = await api.query.system.accountNonce(keyring.dave.address());
+    const exERA = new ExtrinsicEra(new MortalEra({ isBlockNumber: true, period: new U64(17), current: new U64(16) }), 1);
+    const ex = api.tx.balances
+      .transfer(keyring.eve.address(), 12345);
+    ex.signature.set('era', exERA);
+    return ex
       .sign(keyring.dave, { nonce })
       .send(({ events, status }) => {
         console.log('Transaction status:', status.type);
