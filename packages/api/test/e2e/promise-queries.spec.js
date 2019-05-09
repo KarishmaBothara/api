@@ -4,8 +4,11 @@
 
 import BN from 'bn.js';
 import testingPairs from '@polkadot/keyring/testingPairs';
+import { LinkageResult } from '@polkadot/types/codec/Linkage';
 
 import Api from '../../src/promise';
+
+const ZERO = new BN(0);
 
 describe.skip('e2e queries', () => {
   const keyring = testingPairs({ type: 'ed25519' });
@@ -76,6 +79,52 @@ describe.skip('e2e queries', () => {
 
       done();
     });
+  });
+
+  it('subscribes to a linked map (staking.validators)', (done) => {
+    api.query.staking.validators((prefs) => {
+      expect(prefs instanceof LinkageResult).toBe(true);
+
+      done();
+    });
+  });
+
+  it('subscribes to multiple results (freeBalance.multi)', (done) => {
+    api.query.balances.freeBalance.multi([
+      keyring.alice.address(),
+      keyring.bob.address(),
+      keyring.ferdie.address(),
+      '5DTestUPts3kjeXSTMyerHihn1uwMfLj8vU8sqF7qYrFabHE'
+    ], (balances) => {
+      expect(balances).toHaveLength(4);
+
+      console.error(balances);
+
+      done();
+    });
+  });
+
+  it('subscribes to derived balances (balances.all)', (done) => {
+    api.derive.balances.all(
+      keyring.alice.address(),
+      (all) => {
+        expect(all.accountId).toEqual(keyring.alice.address());
+
+        expect(all.freeBalance).toBeDefined();
+        expect(all.freeBalance.gt(ZERO)).toBe(true);
+
+        expect(all.availableBalance).toBeDefined();
+        expect(all.availableBalance.gt(ZERO)).toBe(true);
+
+        expect(all.reservedBalance).toBeDefined();
+        expect(all.lockedBalance).toBeDefined();
+        expect(all.vestedBalance).toBeDefined();
+
+        console.error(all);
+
+        done();
+      }
+    );
   });
 
   it('makes a query at a specific block', async () => {

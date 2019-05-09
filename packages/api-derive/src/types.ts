@@ -8,11 +8,11 @@ import { AccountId, Balance, Vote } from '@polkadot/types';
 export type DerivedBalances = {
   accountId: AccountId,
   freeBalance: Balance,
-  nominatedBalance: Balance,
+  lockedBalance: Balance,
+  availableBalance: Balance,
   reservedBalance: Balance,
   votingBalance: Balance,
-  stakingBalance: Balance,
-  nominators?: Array<DerivedBalances>
+  vestedBalance: Balance
 };
 
 export type DerivedFees = {
@@ -31,4 +31,17 @@ export type DerivedReferendumVote = {
   accountId: AccountId,
   balance: Balance,
   vote: Vote
+};
+
+export type DerivedContractFees = {
+  callBaseFee: BN,
+  contractFee: BN,
+  createBaseFee: BN,
+  creationFee: BN,
+  rentByteFee: BN,
+  rentDepositOffset: BN,
+  transactionBaseFee: BN,
+  transactionByteFee: BN,
+  transferFee: BN,
+  tombstoneDeposit: BN
 };
