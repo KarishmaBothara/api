@@ -13,8 +13,8 @@ import BlockNumber from "@polkadot/types/type/BlockNumber";
 import U8a from "@polkadot/types/codec/U8a";
 
 interface EraMethod {
-  startBlockNumber: BlockNumber;
-  endBlockNumber: BlockNumber;
+  current: BlockNumber;
+  period: BlockNumber;
 }
 
 export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
@@ -92,9 +92,9 @@ export class MortalEra extends Tuple {
       }
       throw new Error('Invalid data passed to Mortal era');
     } else if (isObject(value)) {
-        const current = value.startBlockNumber;
-        const period = value.endBlockNumber.toNumber() - value.startBlockNumber.toNumber();
-        let calPeriod = Math.pow(2, Math.ceil(Math.log2(period)));
+        const {current} = value;
+        const {period} = value;
+        let calPeriod = Math.pow(2, Math.ceil(Math.log2(period.toNumber())));
         calPeriod = Math.min( Math.max(calPeriod, 4), 1<< 16);
         const phase = current.toNumber() % calPeriod;
         const factor = 12;
