@@ -8,24 +8,23 @@ import U64 from '../primitive/U64';
 describe('ExtrinsicEra', () => {
 
   it('decodes an Extrinsic Era with immortal', () => {
-    const extrinsicEra = new ExtrinsicEra(new Uint8Array([0,0,0]));
-    expect(extrinsicEra.mortalEra.period).toBeUndefined();
-    expect(extrinsicEra.mortalEra.phase).toBeUndefined();
+    const extrinsicEra = new ExtrinsicEra(new Uint8Array([0]));
+    expect(extrinsicEra.asMortalEra).toBeUndefined();
+    expect(extrinsicEra.asImmortalEra).toBeDefined();
   });
 
   it('decodes an Extrinsic Era from u8 as mortal', () => {
-    const extrinsicEra = new ExtrinsicEra(new Uint8Array([11, 125]));
-    expect(extrinsicEra.mortalEra.period.toNumber()).toEqual(4068);
-    expect(extrinsicEra.mortalEra.phase.toNumber()).toEqual(2000);
+    const extrinsicEra = new ExtrinsicEra(new Uint8Array([1, 78, 156]));
+    expect((extrinsicEra.asMortalEra as MortalEra).period.toNumber()).toEqual(32768);
+    expect((extrinsicEra.asMortalEra as MortalEra).phase.toNumber()).toEqual(20000);
   });
 
 
-  it.only('encode an Extrinsic Era from Object with blocknumber & period as mortal instance', () => {
+  it('encode an Extrinsic Era from Object with blocknumber & period as mortal instance', () => {
     const mortalIndex = 1;
     const extrinsicEra = new ExtrinsicEra({ startBlockNumber: new U64(1400), endBlockNumber: new U64(1600) }, mortalIndex);
-    console.log('era', extrinsicEra.toU8a().join(','))
-    expect(extrinsicEra.mortalEra.period.toNumber()).toBeGreaterThan(4);
-    expect(extrinsicEra.mortalEra.period.toNumber()).toEqual(256);
-    expect(extrinsicEra.mortalEra.phase.toNumber()).toEqual(120);
+    expect((extrinsicEra.asMortalEra as MortalEra).period.toNumber()).toBeGreaterThan(4);
+    expect((extrinsicEra.asMortalEra as MortalEra).period.toNumber()).toEqual(256);
+    expect((extrinsicEra.asMortalEra as MortalEra).phase.toNumber()).toEqual(120);
   });
 });

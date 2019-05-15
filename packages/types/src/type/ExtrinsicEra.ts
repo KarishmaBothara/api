@@ -7,9 +7,8 @@ import {isHex, isU8a, hexToU8a, isObject} from '@polkadot/util';
 import Tuple from '../codec/Tuple';
 import U64 from '../primitive/U64';
 import U8 from '../primitive/U8';
-import U32 from '../primitive/U32';
 import U16 from '../primitive/U16';
-import { IExtrinsicEra, AnyU8a } from '../types';
+import { AnyU8a } from '../types';
 import BlockNumber from "@polkadot/types/type/BlockNumber";
 import U8a from "@polkadot/types/codec/U8a";
 
@@ -18,7 +17,7 @@ interface EraMethod {
   endBlockNumber: BlockNumber;
 }
 
-export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> implements IExtrinsicEra {
+export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
   constructor (value?: any, index?: number) {
     super({ ImmortalEra, MortalEra }, value, index);
   }
@@ -26,15 +25,21 @@ export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> impl
   /**
    * @description Returns the item as a [[ImmortalEra]]
    */
-  get immortalEra (): ImmortalEra {
-    return this.value as ImmortalEra;
+  get asImmortalEra (): ImmortalEra | undefined{
+    if (this.index === 0) {
+      return this.value as ImmortalEra;
+    }
+    return;
   }
 
   /**
    * @description Returns the item as a [[MortalEra]]
    */
-  get mortalEra (): MortalEra {
-    return this.value as MortalEra;
+  get asMortalEra (): MortalEra | undefined {
+    if (this.index === 1) {
+       return this.value as MortalEra;
+    }
+    return;
   }
 
   /**
@@ -45,7 +50,7 @@ export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> impl
     if (this.index === 0 ) {
       return super.toU8a()
     } else {
-      return this.mortalEra.toU8a(isBare);
+      return (this.asMortalEra as MortalEra).toU8a(isBare);
     }
   }
 }
@@ -85,13 +90,12 @@ export class MortalEra extends Tuple {
       if (period.toNumber() >= 4 && phase < period.toNumber()) {
         return [new U8(period), new U8(phase)];
       }
-      return [new U8(), new U8()];
+      throw new Error('Invalid data passed to Mortal era');
     } else if (isObject(value)) {
         const current = value.startBlockNumber;
         const period = value.endBlockNumber.toNumber() - value.startBlockNumber.toNumber();
         let calPeriod = Math.pow(2, Math.ceil(Math.log2(period)));
-        calPeriod = Math.max(calPeriod, 4);
-        calPeriod = Math.min(calPeriod, 1<< 16);
+        calPeriod = Math.min( Math.max(calPeriod, 4), 1<< 16);
         const phase = current.toNumber() % calPeriod;
         const factor = 12;
         const quantizeFactor = calPeriod >> factor > 1 ? calPeriod >> factor : 1;
@@ -123,7 +127,7 @@ export class MortalEra extends Tuple {
     const period = new U64(this.period);
     const phase = new U64(this.phase);
     const quantize_factor = Math.max(period.toNumber() >> 12, 1);
-    const trailingZeros: any = this.getTrailingZeros(period);
+    const trailingZeros = this.getTrailingZeros(period);
     const encoded = Math.min(15, Math.max(1, trailingZeros - 1)) + (((phase.toNumber() / quantize_factor) << 4));
     const encode = new U16(encoded);
     const first = encode.toNumber() >> 8;
@@ -131,7 +135,7 @@ export class MortalEra extends Tuple {
     return new Uint8Array([second, first]);
   }
 
-  getTrailingZeros(period: U64): U32 {
+  getTrailingZeros(period: U64) {
     let zeros = '';
     let periodN = period.toNumber();
     periodN = parseInt(Number(periodN).toString(2));
@@ -141,11 +145,11 @@ export class MortalEra extends Tuple {
       periodN = periodN /= 10;
       zeros += 0;
     }
-    return new U32(zeros.length);
+    return zeros.length;
   }
 
 
-  birth(current: U64) : U64{
+  birth(current: U64) {
     const b =  Math.floor((Math.max(current.toNumber(),this.phase.toNumber()) - this.phase.toNumber()) / this.period.toNumber()) * this.period.toNumber() + this.phase.toNumber();
     return new U64(b);
   }

@@ -9,7 +9,6 @@ import Method from './primitive/Method';
 import Address from './type/Address';
 import { FunctionMetadata as MetaV0 } from './Metadata/v0/Modules';
 import { MetadataCall as MetaV4 } from './Metadata/v1/Calls';
-import { ImmortalEra, MortalEra } from './type/ExtrinsicEra';
 
 export type CodecArg = Codec | BN | Boolean | String | Uint8Array | boolean | number | string | undefined | CodecArgArray | CodecArgObject;
 
@@ -119,12 +118,7 @@ export interface IMethod extends Codec {
 
 export interface IExtrinsicSignature extends Codec {
   readonly isSigned: boolean;
-  era: IExtrinsicEra;
-}
-
-export interface IExtrinsicEra {
-  immortalEra: ImmortalEra;
-  mortalEra: MortalEra;
+  era: Codec;
 }
 
 export interface IExtrinsic extends IMethod {

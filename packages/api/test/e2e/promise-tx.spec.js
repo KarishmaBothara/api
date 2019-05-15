@@ -10,6 +10,7 @@ import Api from '../../src/promise';
 import WsProvider from '../../../rpc-provider/src/ws';
 import SingleAccountSigner from "../util/SingleAccountSigner";
 import ExtrinsicEra from '../../../types/src/type/ExtrinsicEra';
+import U64 from "../../../types/src/primitive/U64";
 
 describe.skip('e2e transactions', () => {
   const keyring = testingPairs({ type: 'ed25519' });
@@ -214,19 +215,31 @@ describe.skip('e2e transactions', () => {
   });
 
   it('makes a transfer with ERA (signAndSend)', async (done) => {
-    try {
       const nonce = await api.query.system.accountNonce(keyring.dave.address());
       const signedBlock = await api.rpc.chain.getBlock();
-      const exERA = new ExtrinsicEra(new Uint8Array([248, 13]), 1);
-      const eraBirth = exERA.mortalEra.birth(signedBlock.block.header.number);
+      const currentHeight = signedBlock.block.header.number;
+      // const exERA = new ExtrinsicEra(new Uint8Array([248, 13]), 1);
+      const exERA = new ExtrinsicEra({ startBlockNumber: new U64(currentHeight+10), endBlockNumber: new U64(currentHeight+50) }, 1);
+      const eraBirth = exERA.asMortalEra.birth(currentHeight);
       const eraHash = await api.rpc.chain.getBlockHash(eraBirth);
       const ex = api.tx.balances
         .transfer(keyring.eve.address(), 12345);
       const tx = await ex.signAndSend(keyring.dave, {blockHash: eraHash, era:exERA, nonce});
       expect(tx.toHex()).toHaveLength(66);
       done();
-    }catch (e) {
-      console.log(e);
-    }
+  });
+
+  it('makes a transfer with ERA (signAndSend) with invalid time', async (done) => {
+      const nonce = await api.query.system.accountNonce(keyring.alice.address());
+      const signedBlock = await api.rpc.chain.getBlock();
+      const currentHeight = signedBlock.block.header.number;
+      const exERA = new ExtrinsicEra({ startBlockNumber: new U64(currentHeight-40), endBlockNumber: new U64(currentHeight+10) }, 1);
+      const eraBirth = exERA.asMortalEra.birth(currentHeight);
+      const eraHash = await api.rpc.chain.getBlockHash(eraBirth);
+      const ex = api.tx.balances
+        .transfer(keyring.eve.address(), 12345);
+      const tx = await ex.signAndSend(keyring.alice, {blockHash: eraHash, era:exERA, nonce});
+      expect(tx).toBeUndefined();
+      done();
   });
 });
