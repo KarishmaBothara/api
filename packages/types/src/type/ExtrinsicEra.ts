@@ -3,7 +3,7 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import EnumType from '../codec/EnumType';
-import {isHex, isU8a, hexToU8a, isObject} from '@polkadot/util';
+import {isHex, isU8a, hexToU8a, isObject, assert} from '@polkadot/util';
 import Tuple from '../codec/Tuple';
 import U64 from '../primitive/U64';
 import U8 from '../primitive/U8';
@@ -25,21 +25,31 @@ export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
   /**
    * @description Returns the item as a [[ImmortalEra]]
    */
-  get asImmortalEra (): ImmortalEra | undefined{
-    if (this.index === 0) {
-      return this.value as ImmortalEra;
-    }
-    return;
+  get asImmortalEra (): ImmortalEra {
+    assert(this.isImmortalEra, `Cannot convert '${this.type}' via asImmortalEra`);
+    return this.value as ImmortalEra;
   }
 
   /**
    * @description Returns the item as a [[MortalEra]]
    */
-  get asMortalEra (): MortalEra | undefined {
-    if (this.index === 1) {
-       return this.value as MortalEra;
-    }
-    return;
+  get asMortalEra (): MortalEra {
+    assert(this.isMortalEra, `Cannot convert '${this.type}' via asMortalEra`);
+    return this.value as MortalEra;
+  }
+
+  /**
+   * @description `true` if Immortal
+   */
+  get isImmortalEra (): boolean {
+    return this.type === 'ImmortalEra';
+  }
+
+  /**
+   * @description `true` if Mortal
+   */
+  get isMortalEra (): boolean {
+    return this.type === 'MortalEra';
   }
 
   /**
@@ -82,11 +92,10 @@ export class MortalEra extends Tuple {
       const u8a = value;
       const first = u8a.subarray(0, 1);
       let second = u8a.subarray(1, 2);
-      const encoded = new U64(new U64(first).toNumber() + (new U64(second).toNumber() << 8));
-      const period = new U64(2 << (encoded.toNumber() % (1 << 4)));
-      const factor = 12;
-      const quantizeFactor = Math.max(period.toNumber() >> factor, 1);
-      let phase = (encoded.toNumber() >> 4) * quantizeFactor;
+      const encoded = new U64(first).toNumber() + (new U64(second).toNumber() << 8);
+      const period = new U64(2 << (encoded % (1 << 4)));
+      const quantizeFactor = Math.max(period.toNumber() >> 12, 1);
+      let phase = (encoded >> 4) * quantizeFactor;
       if (period.toNumber() >= 4 && phase < period.toNumber()) {
         return [new U8(period), new U8(phase)];
       }
@@ -124,8 +133,8 @@ export class MortalEra extends Tuple {
    */
   toU8a (isBare?: boolean): Uint8Array {
 
-    const period = new U64(this.period);
-    const phase = new U64(this.phase);
+    const period = this.period;
+    const phase = this.phase;
     const quantize_factor = Math.max(period.toNumber() >> 12, 1);
     const trailingZeros = this.getTrailingZeros(period);
     const encoded = Math.min(15, Math.max(1, trailingZeros - 1)) + (((phase.toNumber() / quantize_factor) << 4));
@@ -136,14 +145,14 @@ export class MortalEra extends Tuple {
   }
 
   getTrailingZeros(period: U64) {
-    let zeros = '';
+    const zeros: number[] = [];
     let periodN = period.toNumber();
     periodN = parseInt(Number(periodN).toString(2));
     //periodN = periodN.toString(2)
 
     while (periodN % 10 == 0) {
       periodN = periodN /= 10;
-      zeros += 0;
+      zeros.push(0);
     }
     return zeros.length;
   }
