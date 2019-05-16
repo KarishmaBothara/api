@@ -39,14 +39,14 @@ export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
    * @description `true` if Immortal
    */
   get isImmortalEra (): boolean {
-    return this.type === 'ImmortalEra';
+    return this.index === 0;
   }
 
   /**
    * @description `true` if Mortal
    */
   get isMortalEra (): boolean {
-    return this.type === 'MortalEra';
+    return this.index === 1;
   }
 
   /**
@@ -96,7 +96,7 @@ export class MortalEra extends Tuple {
         return [new U8(period), new U8(phase)];
       }
       throw new Error('Invalid data passed to Mortal era');
-    } else if (isObject(value)) {
+    } else if (isObject(value) && value.hasOwnProperty('period') && value.hasOwnProperty('current')) {
       const { current } = value;
       const { period } = value;
       let calPeriod = Math.pow(2, Math.ceil(Math.log2(period)));

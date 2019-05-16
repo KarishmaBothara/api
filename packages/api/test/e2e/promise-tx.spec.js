@@ -227,6 +227,7 @@ describe.skip('e2e transactions', () => {
       const ex = api.tx.balances
         .transfer(keyring.eve.address(), 12345);
       const tx = await ex.signAndSend(keyring.dave, {blockHash: eraHash, era:exERA, nonce});
+
       expect(tx.toHex()).toHaveLength(66);
       done();
   });
@@ -245,6 +246,7 @@ describe.skip('e2e transactions', () => {
         console.log(`Chain is at block: #${header.blockNumber}`);
          if (header.blockNumber.toNumber() === eraDeath-1) {
            const tx = await ex.signAndSend(keyring.alice, {blockHash: eraHash, era:exERA, nonce});
+
            expect(tx).toBeUndefined();
            done();
          }

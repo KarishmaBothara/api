@@ -23,7 +23,6 @@ describe('ExtrinsicEra', () => {
     const mortalIndex = 1;
     const extrinsicEra = new ExtrinsicEra({ current: 1400, period: 200 }, mortalIndex);
 
-    expect(extrinsicEra.asMortalEra.period.toNumber()).toBeGreaterThan(4);
     expect(extrinsicEra.asMortalEra.period.toNumber()).toEqual(256);
     expect(extrinsicEra.asMortalEra.phase.toNumber()).toEqual(120);
   });
