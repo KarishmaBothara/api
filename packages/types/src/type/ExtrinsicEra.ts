@@ -62,6 +62,7 @@ export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
   }
 }
 
+const VALID_IMMORTAL = new U8a([0]);
 /**
  * @name ImmortalEra
  * @description
@@ -70,6 +71,8 @@ export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
 export class ImmortalEra extends U8a {
   constructor (value?: AnyU8a) {
     super(value);
+
+    assert(this.eq(VALID_IMMORTAL), `IMMORTAL: expected ${VALID_IMMORTAL.toHex()}, found ${this.toHex()}`);
   }
 }
 
@@ -137,7 +140,6 @@ export class MortalEra extends Tuple {
    * @param isBare true when the value has none of the type-specific prefixes (internal)
    */
   toU8a (isBare?: boolean): Uint8Array {
-
     const period = this.period.toNumber();
     const phase = this.phase.toNumber();
     const quantizeFactor = Math.max(period >> 12, 1);
