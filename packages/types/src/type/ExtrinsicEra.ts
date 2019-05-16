@@ -3,18 +3,15 @@
 // of the Apache-2.0 license. See the LICENSE file for details.
 
 import EnumType from '../codec/EnumType';
-import {isHex, isU8a, hexToU8a, isObject, assert, u8aToBn} from '@polkadot/util';
+import { isHex, isU8a, hexToU8a, isObject, assert, u8aToBn } from '@polkadot/util';
 import Tuple from '../codec/Tuple';
-import U64 from '../primitive/U64';
 import U8 from '../primitive/U8';
-import U16 from '../primitive/U16';
 import { AnyU8a } from '../types';
-import BlockNumber from "@polkadot/types/type/BlockNumber";
-import U8a from "@polkadot/types/codec/U8a";
+import U8a from '@polkadot/types/codec/U8a';
 
 interface EraMethod {
-  current: BlockNumber;
-  period: BlockNumber;
+  current: number;
+  period: number;
 }
 
 export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
@@ -57,16 +54,16 @@ export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
    * @param isBare true when the value has none of the type-specific prefixes (internal)
    */
   toU8a (isBare?: boolean): Uint8Array {
-    if (this.index === 0 ) {
-      return super.toU8a()
+    if (this.index === 0) {
+      return super.toU8a();
     } else {
-      return (this.asMortalEra as MortalEra).toU8a(isBare);
+      return this.asMortalEra.toU8a(isBare);
     }
   }
 }
 
 export class ImmortalEra extends U8a {
-  constructor(value?: AnyU8a) {
+  constructor (value?: AnyU8a) {
     super(value);
   }
 }
@@ -100,15 +97,14 @@ export class MortalEra extends Tuple {
       }
       throw new Error('Invalid data passed to Mortal era');
     } else if (isObject(value)) {
-        const {current} = value;
-        const {period} = value;
-        let calPeriod = Math.pow(2, Math.ceil(Math.log2(period.toNumber())));
-        calPeriod = Math.min( Math.max(calPeriod, 4), 1<< 16);
-        const phase = current.toNumber() % calPeriod;
-        const factor = 12;
-        const quantizeFactor = calPeriod >> factor > 1 ? calPeriod >> factor : 1;
-        let quantizedPhase = phase / quantizeFactor * quantizeFactor;
-        return [new U8(calPeriod), new U8(quantizedPhase)];
+      const { current } = value;
+      const { period } = value;
+      let calPeriod = Math.pow(2, Math.ceil(Math.log2(period)));
+      calPeriod = Math.min(Math.max(calPeriod, 4), 1 << 16);
+      const phase = current % calPeriod;
+      const quantizeFactor = Math.max(calPeriod >> 12, 1);
+      const quantizedPhase = phase / quantizeFactor * quantizeFactor;
+      return [new U8(calPeriod), new U8(quantizedPhase)];
     }
     return [new U8(), new U8()];
   }
@@ -132,36 +128,33 @@ export class MortalEra extends Tuple {
    */
   toU8a (isBare?: boolean): Uint8Array {
 
-    const period = this.period;
-    const phase = this.phase;
-    const quantize_factor = Math.max(period.toNumber() >> 12, 1);
-    const trailingZeros = this.getTrailingZeros(period.toNumber());
-    const encoded = Math.min(15, Math.max(1, trailingZeros - 1)) + (((phase.toNumber() / quantize_factor) << 4));
-    const encode = new U16(encoded);
-    const first = encode.toNumber() >> 8;
-    const second = encode.toNumber() & 0xff;
+    const period = this.period.toNumber();
+    const phase = this.phase.toNumber();
+    const quantizeFactor = Math.max(period >> 12, 1);
+    const trailingZeros = this.getTrailingZeros(period);
+    const encoded = Math.min(15, Math.max(1, trailingZeros - 1)) + (((phase / quantizeFactor) << 4));
+    const first = encoded >> 8;
+    const second = encoded & 0xff;
     return new Uint8Array([second, first]);
   }
 
-  getTrailingZeros(period: number) {
+  getTrailingZeros (period: number) {
     const zeros: number[] = [];
     let periodN = period;
-    periodN = parseInt(periodN.toString(2));
+    periodN = parseInt(periodN.toString(2), 10);
 
-    while (periodN % 10 == 0) {
+    while (periodN % 10 === 0) {
       periodN = periodN /= 10;
       zeros.push(0);
     }
     return zeros.length;
   }
 
-
-  birth(current: number) {
-    const b =  Math.floor((Math.max(current,this.phase.toNumber()) - this.phase.toNumber()) / this.period.toNumber()) * this.period.toNumber() + this.phase.toNumber();
-    return new U64(b);
+  birth (current: number) {
+    return Math.floor((Math.max(current,this.phase.toNumber()) - this.phase.toNumber()) / this.period.toNumber()) * this.period.toNumber() + this.phase.toNumber();
   }
 
-  death(current: number) {
-    return this.birth(current).toNumber() + this.period.toNumber();
+  death (current: number) {
+    return this.birth(current) + this.period.toNumber();
   }
 }
