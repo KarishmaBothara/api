@@ -62,7 +62,7 @@ export default class ExtrinsicEra extends EnumType<ImmortalEra | MortalEra> {
   }
 }
 
-const VALID_IMMORTAL = new U8a([0]);
+const VALID_IMMORTAL = new U8a([]);
 /**
  * @name ImmortalEra
  * @description

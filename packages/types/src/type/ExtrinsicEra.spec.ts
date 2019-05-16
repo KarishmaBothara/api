@@ -7,7 +7,7 @@ import ExtrinsicEra from './ExtrinsicEra';
 describe('ExtrinsicEra', () => {
 
   it('decodes an Extrinsic Era with immortal', () => {
-    const extrinsicEra = new ExtrinsicEra(new Uint8Array([0, 0]));
+    const extrinsicEra = new ExtrinsicEra(new Uint8Array([0]));
 
     expect(extrinsicEra.asImmortalEra).toBeDefined();
   });
